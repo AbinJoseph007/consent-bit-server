@@ -7,10 +7,8 @@ import jwt from "../../../lib/utils/jwt";
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication
-    const accessToken = await jwt.verifyAuth(request);
-
+    const accessToken = await jwt.getAccessToken(request);
     console.log("our access token", accessToken);
-
 
     if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,7 +19,6 @@ export async function GET(request: NextRequest) {
     const siteId = searchParams.get("siteId");
     console.log("our site id from custom code", siteId);
 
-
     if (!siteId) {
       return NextResponse.json(
         { error: "Site ID is required" },
@@ -31,43 +28,41 @@ export async function GET(request: NextRequest) {
 
     // Initialize Webflow client and script controller
     const webflow = new WebflowClient({ accessToken });
-
     console.log("site webflow", webflow);
 
     const scriptController = new ScriptController(webflow);
-
     console.log("site scriptcontroller", scriptController);
 
-
     // Fetch custom code for the site
-    // const siteCustomCode = await scriptController.getSiteCustomCode(siteId);
-    // console.log("site custom code",siteCustomCode);
-
-
-    // return NextResponse.json({ siteCustomCode }, { status: 200 });
-
-    const response = await fetch(`https://api.webflow.com/v2/sites/${siteId}/custom_code`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Accept-Version": "1.0.0",
-        "Content-Type": "application/json"
+    const response = await fetch(
+      `https://api.webflow.com/v2/sites/${siteId}/registered_scripts`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Accept-Version": "1.0.0",
+          "Content-Type": "application/json",
+        },
       }
-    });
+    );
 
     console.log("the response", response);
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Webflow API error:", errorData);
-      throw new Error(`Failed to fetch site custom code: ${errorData.message}`);
+      return NextResponse.json(
+        { error: `Failed to fetch site custom code: ${errorData.message}` },
+        { status: response.status }
+      );
     }
 
     const result = await response.json();
     console.log("Custom Code Response:", result);
 
+    // ✅ CORRECT: Return a valid NextResponse
+    return NextResponse.json(result, { status: 200 });
 
-    return result;
   } catch (error) {
     console.error("Error fetching site custom code:", error);
     return NextResponse.json(

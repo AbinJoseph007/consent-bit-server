@@ -123,6 +123,7 @@ export async function getAccessTokenFromSiteId(
     "SELECT accessToken FROM siteAuthorizations WHERE siteId = ?",
     [siteId]
   );
+console.log("row site id",row ,"site id",siteId);
 
   if (!row?.accessToken) {
     throw new Error("No access token found or site does not exist");

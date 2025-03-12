@@ -124,10 +124,21 @@ const verifyAuth = async (request: NextRequest) => {
  */
 const getAccessToken = async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { siteId } = body;
+    let siteId;
 
-    // Get the access token from your database or wherever you store it
+    if (request.method === "POST") {
+      const body = await request.json(); // This fails if body is empty
+      siteId = body.siteId;
+    } else if (request.method === "GET") {
+      siteId = request.nextUrl.searchParams.get("siteId");
+    }
+
+    if (!siteId) {
+      console.error("No siteId provided in request.");
+      return null;
+    }
+
+    // Get the access token from your database
     const accessToken = await db.getAccessTokenFromSiteId(siteId);
 
     if (!accessToken) {
@@ -141,6 +152,7 @@ const getAccessToken = async (request: NextRequest) => {
     return null;
   }
 };
+
 
 const jwtUtils = {
   createSessionToken,
