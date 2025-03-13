@@ -78,6 +78,30 @@ export class ScriptController {
     }
   }
 
+  async registerHostedScripts(siteId: string) {
+    try {
+      // if (!request.hostedLocation) {
+      //   throw new Error("Hosted location is required");
+      // }
+      let hostedLocation = "https://cdn.jsdelivr.net/gh/snm62/consentbit@08beb63/consentbit.js";
+       const integrityHash = await this.generateSRI(hostedLocation);
+
+      const scriptData = {
+       // hostedLocation: request.hostedLocation,
+        hostedLocation: hostedLocation,
+        integrityHash: integrityHash,
+        canCopy:  true,
+        version: "1.0.0",
+        displayName: `Consent Script${Date.now()}`,
+      };
+      return await this.webflow.scripts.registerHosted(siteId, scriptData);
+    } catch (error) {
+      console.error("Error registering hosted script:", error);
+      throw error;
+    }
+  }
+
+
   // Site-level Methods
   async getSiteCustomCode(siteId: string) {
     console.log("Using Access Token inside getSiteCustomCode:", this.webflow);
